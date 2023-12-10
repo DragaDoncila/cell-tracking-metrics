@@ -159,3 +159,10 @@ def test_iou_div_metrics(benchmark, iou_matched):
     assert div_results["Frame Buffer 0"]["False Negative Divisions"] == 25
     assert div_results["Frame Buffer 0"]["False Positive Divisions"] == 31
     assert div_results["Frame Buffer 0"]["True Positive Divisions"] == 69
+
+
+# def test_track_overlap_metrics(benchmark, iou_matched):
+#     def run_compute():
+#         return TrackOverlapMetrics(copy.deepcopy(iou_matched)).compute()
+
+#     benchmark(run_compute)
