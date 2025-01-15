@@ -143,7 +143,7 @@ Given the ground truth graph below, each of the subsequent prediction graphs wou
 
     plot_matched(
         [ex_graphs.one_child(1), ex_graphs.no_children(1), ex_graphs.wrong_child(1)],
-        [{2: "FN"}, {2: "FN"}, {2: "FN"}],
+        [{2: "FN"}, {2: "FN"}, {2: "FN", 7: "FP"}],
         "",
         ["Missing daughter", "Missing daughters", "Wrong daughter"]
     )
@@ -158,8 +158,8 @@ A false positive division is any division event in the predicted graph that does
     :hide-code:
     
     plot_matched(
-        [ex_graphs.fp_div(1)],
-        [{6: "FP"}],
+        [ex_graphs.fp_div(1), ex_graphs.wrong_child(1)],
+        [{6: "FP"}, {2: "FN", 7: "FP"}],
         "",
-        [""]
+        ["No division", "Wrong daughter"]
     )

@@ -72,9 +72,15 @@ def _classify_divisions(matched_data: Matched):
             ]
 
             # If daughters are same, division is correct
-            if Counter(succ_gt) == Counter(succ_pred):
+            cnt_gt = Counter(succ_gt)
+            cnt_pred = Counter(succ_pred)
+            if cnt_gt == cnt_pred:
                 g_gt.set_flag_on_node(gt_node, NodeFlag.TP_DIV, True)
                 g_pred.set_flag_on_node(pred_node, NodeFlag.TP_DIV, True)
+            # Only one daughter matched
+            elif len(cnt_gt - cnt_pred) == 1:
+                g_gt.set_flag_on_node(gt_node, NodeFlag.FN_DIV)
+                g_pred.set_flag_on_node(pred_node, NodeFlag.FP_DIV)
             # If daughters are at all mismatched, division is false negative
             else:
                 g_gt.set_flag_on_node(gt_node, NodeFlag.FN_DIV, True)
