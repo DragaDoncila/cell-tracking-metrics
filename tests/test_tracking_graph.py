@@ -250,6 +250,24 @@ def test_set_flag_on_node(simple_graph):
         simple_graph.set_flag_on_node("1_0", "x", 2)
 
 
+def test_remove_flag_from_node(simple_graph):
+    flag = NodeFlag.CTC_FALSE_POS
+    simple_graph.set_flag_on_all_nodes(flag)
+
+    simple_graph.remove_flag_from_node("1_3", flag)
+    assert flag not in simple_graph.graph.nodes["1_3"]
+    assert flag not in simple_graph.nodes_by_flag[flag]
+
+    # Check that other nodes were unaffected
+    for node in ["1_0", "1_1", "1_2", "1_4"]:
+        assert flag in simple_graph.graph.nodes[node]
+        assert node in simple_graph.nodes_by_flag[flag]
+
+    # Error if flag not present
+    with pytest.raises(KeyError, match=r".* not present on node .*"):
+        simple_graph.remove_flag_from_node("1_3", NodeFlag.CTC_TRUE_POS)
+
+
 def test_set_flag_on_edge(simple_graph):
     edge_id = ("1_1", "1_3")
     assert EdgeFlag.TRUE_POS not in simple_graph.edges()[edge_id]
@@ -276,6 +294,26 @@ def test_set_flag_on_edge(simple_graph):
 
     with pytest.raises(ValueError):
         simple_graph.set_flag_on_edge(("1_1", "1_3"), "x", 2)
+
+
+def test_remove_flag_from_edge(simple_graph):
+    flag = EdgeFlag.CTC_FALSE_POS
+    simple_graph.set_flag_on_all_edges(flag)
+
+    # Check basic removal
+    edge = ("1_1", "1_3")
+    simple_graph.remove_flag_from_edge(edge, flag)
+    assert flag not in simple_graph.graph.edges[edge]
+    assert edge not in simple_graph.edges_by_flag[flag]
+
+    # Check other edges uneffected
+    for edge in [("1_0", "1_1"), ("1_1", "1_2"), ("1_3", "1_4")]:
+        assert flag in simple_graph.graph.edges[edge]
+        assert edge in simple_graph.edges_by_flag[flag]
+
+    # Error if flag not present
+    with pytest.raises(KeyError, match=r".* not present on edge .*"):
+        simple_graph.remove_flag_from_edge(("1_0", "1_1"), EdgeFlag.INTERTRACK_EDGE)
 
 
 def test_get_tracklets(simple_graph):

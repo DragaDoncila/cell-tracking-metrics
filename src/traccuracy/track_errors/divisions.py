@@ -239,8 +239,8 @@ def _correct_shifted_divisions(matched_data: Matched, n_frames=1):
 
         if correct:
             # Remove error annotations from pred graph
-            g_pred.set_flag_on_node(fp_node, NodeFlag.FP_DIV, False)
-            g_gt.set_flag_on_node(fn_node, NodeFlag.FN_DIV, False)
+            g_pred.remove_flag_from_node(fp_node, NodeFlag.FP_DIV)
+            g_gt.remove_flag_from_node(fn_node, NodeFlag.FN_DIV)
 
             # Add the tp divisions annotations
             g_gt.set_flag_on_node(fn_node, NodeFlag.TP_DIV, True)

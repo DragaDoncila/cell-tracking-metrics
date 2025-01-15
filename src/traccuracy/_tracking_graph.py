@@ -369,6 +369,25 @@ class TrackingGraph:
         else:
             self.nodes_by_flag[flag].discard(_id)
 
+    def remove_flag_from_node(self, _id: Hashable, flag: NodeFlag) -> None:
+        """Removes a flag from a node
+
+        Args:
+            _id (Hashable): The node id on which to set the flag.
+            flag (NodeFlag): The node flag to set. Must be
+                of type NodeFlag - you may not not pass strings, even if they
+                are included in the NodeFlag enum values.
+
+        Raises:
+            KeyError if the flag is not present on the node.
+        """
+
+        if flag not in self.graph.nodes[_id]:
+            raise KeyError(f"Provided {flag} is not present on node {_id}.")
+
+        del self.graph.nodes[_id][flag]
+        self.nodes_by_flag[flag].discard(_id)
+
     def set_flag_on_all_nodes(self, flag: NodeFlag, value: bool = True) -> None:
         """Set an attribute flag for all nodes in the graph.
         If the flag already exists, the existing values will be overwritten.
@@ -422,6 +441,29 @@ class TrackingGraph:
             self.edges_by_flag[flag].add(_id)
         else:
             self.edges_by_flag[flag].discard(_id)
+
+    def remove_flag_from_edge(
+        self, _id: tuple[Hashable, Hashable], flag: EdgeFlag
+    ) -> None:
+        """Removes flag from a given node
+
+        Args:
+            ids (tuple[Hashable]): The edge id or list of edge ids
+                to set the attribute for. Edge ids are a 2-tuple of node ids.
+            flag (traccuracy.EdgeFlag): The edge flag to set. Must be
+                of type EdgeFlag - you may not pass strings, even if they are
+                included in the EdgeFlag enum values.
+
+        Raises:
+            KeyError if edge with _id not in graph.
+            KeyError if flag not present on edge
+        """
+
+        if flag not in self.graph.edges[_id]:
+            raise KeyError(f"Flag {flag} not present on edge {_id}.")
+
+        del self.graph.edges[_id][flag]
+        self.edges_by_flag[flag].discard(_id)
 
     def set_flag_on_all_edges(self, flag: EdgeFlag, value: bool = True) -> None:
         """Set an attribute flag for all edges in the graph.

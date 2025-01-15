@@ -39,10 +39,6 @@ def get_vertex_errors(matched_data: Matched):
         logger.info("Node errors already calculated. Skipping graph annotation")
         return
 
-    comp_graph.set_flag_on_all_nodes(NodeFlag.CTC_TRUE_POS, False)
-    comp_graph.set_flag_on_all_nodes(NodeFlag.NON_SPLIT, False)
-    gt_graph.set_flag_on_all_nodes(NodeFlag.CTC_TRUE_POS, False)
-
     # will flip this when we come across the vertex in the mapping
     comp_graph.set_flag_on_all_nodes(NodeFlag.CTC_FALSE_POS, True)
     gt_graph.set_flag_on_all_nodes(NodeFlag.CTC_FALSE_NEG, True)
@@ -59,16 +55,16 @@ def get_vertex_errors(matched_data: Matched):
         if len(gt_ids) == 1:
             gid = gt_ids[0]
             comp_graph.set_flag_on_node(pred_id, NodeFlag.CTC_TRUE_POS, True)
-            comp_graph.set_flag_on_node(pred_id, NodeFlag.CTC_FALSE_POS, False)
-            gt_graph.set_flag_on_node(gid, NodeFlag.CTC_FALSE_NEG, False)
+            comp_graph.remove_flag_from_node(pred_id, NodeFlag.CTC_FALSE_POS)
+            gt_graph.remove_flag_from_node(gid, NodeFlag.CTC_FALSE_NEG)
             gt_graph.set_flag_on_node(gid, NodeFlag.CTC_TRUE_POS, True)
         elif len(gt_ids) > 1:
             comp_graph.set_flag_on_node(pred_id, NodeFlag.NON_SPLIT, True)
-            comp_graph.set_flag_on_node(pred_id, NodeFlag.CTC_FALSE_POS, False)
+            comp_graph.remove_flag_from_node(pred_id, NodeFlag.CTC_FALSE_POS)
             # number of split operations that would be required to correct the vertices
             ns_count += len(gt_ids) - 1
             for gt_id in gt_ids:
-                gt_graph.set_flag_on_node(gt_id, NodeFlag.CTC_FALSE_NEG, False)
+                gt_graph.remove_flag_from_node(gt_id, NodeFlag.CTC_FALSE_NEG)
 
     # Record presence of annotations on the TrackingGraph
     comp_graph.node_errors = True
@@ -92,19 +88,11 @@ def get_edge_errors(matched_data: Matched):
     comp_tp_nodes = comp_graph.get_nodes_with_flag(NodeFlag.CTC_TRUE_POS)
     induced_graph = comp_graph.get_subgraph(comp_tp_nodes).graph
 
-    # Set error flags to default/correct value and flip as we find errors
-    comp_graph.set_flag_on_all_edges(EdgeFlag.CTC_FALSE_POS, False)
-    comp_graph.set_flag_on_all_edges(EdgeFlag.WRONG_SEMANTIC, False)
-    gt_graph.set_flag_on_all_edges(EdgeFlag.CTC_FALSE_NEG, False)
-
     gt_comp_mapping = {gt: comp for gt, comp in node_mapping if comp in induced_graph}
     comp_gt_mapping = {comp: gt for gt, comp in node_mapping if comp in induced_graph}
 
     # intertrack edges = connection between parent and daughter
     for graph in [comp_graph, gt_graph]:
-        # Set to False by default
-        graph.set_flag_on_all_edges(EdgeFlag.INTERTRACK_EDGE, False)
-
         for parent in graph.get_divisions():
             for daughter in graph.graph.successors(parent):
                 graph.set_flag_on_edge(
@@ -127,8 +115,10 @@ def get_edge_errors(matched_data: Matched):
             comp_graph.set_flag_on_edge(edge, EdgeFlag.CTC_FALSE_POS, True)
         else:
             # check if semantics are correct
-            is_parent_gt = gt_graph.edges[expected_gt_edge][EdgeFlag.INTERTRACK_EDGE]
-            is_parent_comp = comp_graph.edges[edge][EdgeFlag.INTERTRACK_EDGE]
+            is_parent_gt = gt_graph.edges[expected_gt_edge].get(
+                EdgeFlag.INTERTRACK_EDGE, False
+            )
+            is_parent_comp = comp_graph.edges[edge].get(EdgeFlag.INTERTRACK_EDGE, False)
             if is_parent_gt != is_parent_comp:
                 comp_graph.set_flag_on_edge(edge, EdgeFlag.WRONG_SEMANTIC, True)
 
@@ -136,10 +126,9 @@ def get_edge_errors(matched_data: Matched):
     for edge in tqdm(gt_graph.edges, "Evaluating FN edges"):
         source, target = edge[0], edge[1]
         # this edge is adjacent to an edge we didn't detect, so it definitely is an fn
-        if (
-            gt_graph.nodes[source][NodeFlag.CTC_FALSE_NEG]
-            or gt_graph.nodes[target][NodeFlag.CTC_FALSE_NEG]
-        ):
+        if gt_graph.nodes[source].get(NodeFlag.CTC_FALSE_NEG, False) or gt_graph.nodes[
+            target
+        ].get(NodeFlag.CTC_FALSE_NEG, False):
             gt_graph.set_flag_on_edge(edge, EdgeFlag.CTC_FALSE_NEG, True)
             continue
 
