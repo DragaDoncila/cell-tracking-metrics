@@ -1,2 +1,1 @@
-"""Subpackage for annotating errors on nodes and edges of TrackingGraphs
-"""
+"""Subpackage for annotating errors on nodes and edges of TrackingGraphs"""

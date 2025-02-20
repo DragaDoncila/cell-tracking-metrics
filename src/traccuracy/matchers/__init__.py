@@ -1,4 +1,4 @@
-""" Subpackage for matching ground truth and prediction tracks
+"""Subpackage for matching ground truth and prediction tracks
 
 This subpackage contains functions that match nodes and edges
 of a ground truth and predicted tracking solution.
