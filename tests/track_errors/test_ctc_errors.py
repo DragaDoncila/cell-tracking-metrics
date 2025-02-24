@@ -133,6 +133,63 @@ class TestStandardNode:
                 assert NodeFlag.CTC_FALSE_NEG not in attrs
                 assert NodeFlag.NON_SPLIT not in attrs
 
+    def test_gap_close_gt_gap(self):
+        matched = ex_graphs.gap_close_gt_gap()
+        get_vertex_errors(matched)
+
+        # One FP node in pred
+        for node, attrs in matched.pred_graph.nodes.items():
+            if node == 6:
+                assert NodeFlag.CTC_FALSE_POS in attrs
+            else:
+                assert NodeFlag.CTC_TRUE_POS in attrs
+
+        # All gt node correct
+        for attrs in matched.gt_graph.nodes.values():
+            assert NodeFlag.CTC_TRUE_POS in attrs
+
+    def test_gap_close_pred_gap(self):
+        matched = ex_graphs.gap_close_pred_gap()
+        get_vertex_errors(matched)
+
+        # One FN in gt
+        for node, attrs in matched.gt_graph.nodes.items():
+            if node == 3:
+                assert NodeFlag.CTC_FALSE_NEG in attrs
+            else:
+                assert NodeFlag.CTC_TRUE_POS in attrs
+
+        # All pred correct
+        for attrs in matched.pred_graph.nodes.values():
+            assert NodeFlag.CTC_TRUE_POS in attrs
+
+    def test_gap_close_matched_gap(self):
+        matched = ex_graphs.gap_close_matched_gap()
+        get_vertex_errors(matched)
+
+        # all correct
+        for graph in [matched.gt_graph, matched.pred_graph]:
+            for attrs in graph.nodes.values():
+                assert NodeFlag.CTC_TRUE_POS in attrs
+
+    def test_gap_close_offset(self):
+        matched = ex_graphs.gap_close_offset()
+        get_vertex_errors(matched)
+
+        # Fp in pred
+        for node, attrs in matched.pred_graph.nodes.items():
+            if node == 6:
+                assert NodeFlag.CTC_FALSE_POS in attrs
+            else:
+                assert NodeFlag.CTC_TRUE_POS in attrs
+
+        # FN in gt
+        for node, attrs in matched.gt_graph.nodes.items():
+            if node == 3:
+                assert NodeFlag.CTC_FALSE_NEG in attrs
+            else:
+                assert NodeFlag.CTC_TRUE_POS in attrs
+
 
 def test_assign_edge_errors():
     comp_ids = [3, 7, 10]
@@ -528,3 +585,60 @@ class TestStandardEdge:
         assert attrs.get(EdgeFlag.CTC_FALSE_NEG) is True
         attrs = matched.gt_graph.edges[(2, 3)]
         assert attrs.get(EdgeFlag.INTERTRACK_EDGE) is True
+
+    def test_gap_close_gt_gap(self):
+        matched = self.prep_matched(ex_graphs.gap_close_gt_gap())
+
+        # pred edges are not false positive because node 6 isn't in induced graph
+        # gt gap edge is FN
+        assert EdgeFlag.CTC_FALSE_NEG in matched.gt_graph.edges[(1, 3)]
+
+    def test_gap_close_pred_gap(self):
+        matched = self.prep_matched(ex_graphs.gap_close_pred_gap())
+
+        # Pred edges if a fp
+        assert EdgeFlag.CTC_FALSE_POS in matched.pred_graph.edges[(6, 8)]
+
+        # Gt edges are false neg
+        assert EdgeFlag.CTC_FALSE_NEG in matched.gt_graph.edges[(2, 3)]
+        assert EdgeFlag.CTC_FALSE_NEG in matched.gt_graph.edges[(3, 4)]
+
+    def test_gap_close_matched_gap(self):
+        matched = self.prep_matched(ex_graphs.gap_close_matched_gap())
+
+        # No error annotations on either gt or pred edge
+        # True pos edges not annotated by CTC
+        assert EdgeFlag.CTC_FALSE_POS not in matched.pred_graph.edges[(5, 7)]
+        assert EdgeFlag.CTC_FALSE_NEG not in matched.gt_graph.edges[(1, 3)]
+
+    def test_gap_close_shifted(self):
+        matched = self.prep_matched(ex_graphs.gap_close_offset())
+
+        # Both gt edges are false neg
+        for attrs in matched.gt_graph.edges.values():
+            assert EdgeFlag.CTC_FALSE_NEG in attrs
+
+        # No pred edges in the induced graph so no annotation
+        for attrs in matched.pred_graph.edges.values():
+            assert EdgeFlag.CTC_FALSE_POS not in attrs
+
+    def test_div_parent_gap(self):
+        matched = self.prep_matched(ex_graphs.div_parent_gap())
+
+        # Three gt edges are false neg
+        for edge in [(2, 3), (3, 4), (3, 5)]:
+            assert EdgeFlag.CTC_FALSE_NEG in matched.gt_graph.edges[edge]
+
+        # Pred gap edges are false pos
+        for edge in [(9, 11), (9, 12)]:
+            assert EdgeFlag.CTC_FALSE_POS in matched.pred_graph.edges[edge]
+
+    def test_div_daughter_gap(self):
+        matched = self.prep_matched(ex_graphs.div_daughter_gap())
+
+        # Gap pred edge is a false pos
+        assert EdgeFlag.CTC_FALSE_POS in matched.pred_graph.edges[(10, 13)]
+
+        # Two fn gt edges
+        for edge in [(3, 4), (4, 6)]:
+            assert EdgeFlag.CTC_FALSE_NEG in matched.gt_graph.edges[edge]

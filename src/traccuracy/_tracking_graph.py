@@ -94,6 +94,9 @@ class TrackingGraph:
     location (defaults to 'x' and 'y'). As in networkx, every cell must have a unique id, but these
     can be of any (hashable) type.
 
+    Edges typically connect nodes across consecutive frames, but gap closing or frame
+    skipping edges are valid, which connect nodes in frame t to nodes in frames beyond t+1.
+
     We provide common functions for accessing parts of the track graph, for example
     all nodes in a certain frame, or all previous or next edges for a given node.
     Additional functionality can be accessed by querying the stored networkx graph

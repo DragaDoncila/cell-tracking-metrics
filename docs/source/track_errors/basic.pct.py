@@ -206,3 +206,32 @@ plot_matched(
     "",
     ["", "", ""],
 )
+
+# %% [markdown]
+# ### Gap-Closing Edges
+# Gap-closing edges will be annotated as False Positive on the predicted graph
+# and False Negative on the ground truth graph unless both graphs contain an
+# identical gap-closing edge. Similarly, gap-closing edges on the predicted
+# graph that do not exist in the ground truth graph will be annotated as False
+# Positive, with corresponding False Negative annotations on the ground truth.
+#
+# - Ex 1: The gap-closing edges are identical, they will be marked TP.
+# - Ex 2: The GT gap-closing edge is not present in the prediction. It is
+#   annotated as FN. Predicted edges are FP.
+# - Ex 3: The predicted gap-closing edge is not present in the GT. It is
+#  annotated as FP. GT edges are FN.
+# %%
+plot_matched(
+    [
+        ex_graphs.gap_close_matched_gap(),
+        ex_graphs.gap_close_gt_gap(),
+        ex_graphs.gap_close_pred_gap(),
+    ],
+    [
+        {},
+        {(1, 3): "FN", (5, 6): "FP", (6, 7): "FP"},
+        {(2, 3): "FN", (3, 4): "FN", (6, 8): "FP"},
+    ],
+    "",
+    ["Ex. 1", "Ex. 2", "Ex. 3"],
+)

@@ -234,3 +234,76 @@ class TestStandardEdge:
     # ex_graphs.edge_two_to_one
     # ex_graphs.node_one_to_two
     # ex_graphs.edge_one_to_two
+
+
+class TestGapCloseEdge:
+
+    def test_fn_gap_close_edge(self):
+        matched = ex_graphs.gap_close_gt_gap()
+        _classify_edges(matched)
+
+        pred_graph = matched.pred_graph
+        gt_graph = matched.gt_graph
+        # gap close edge is FN
+        assert EdgeFlag.FALSE_NEG in gt_graph.edges[(1, 3)]
+        # pred edges are FP
+        assert EdgeFlag.FALSE_POS in pred_graph.edges[(5, 6)]
+        assert EdgeFlag.FALSE_POS in pred_graph.edges[(6, 7)]
+
+    def test_fp_gap_close_edge(self):
+        matched = ex_graphs.gap_close_pred_gap()
+        _classify_edges(matched)
+
+        pred_graph = matched.pred_graph
+        gt_graph = matched.gt_graph
+
+        # gap close edge is FP
+        assert EdgeFlag.FALSE_POS in pred_graph.edges[(6, 8)]
+        # pred edges are FN
+        assert EdgeFlag.FALSE_NEG in gt_graph.edges[(2, 3)]
+        assert EdgeFlag.FALSE_NEG in gt_graph.edges[(3, 4)]
+
+    def test_good_gap_close_edge(self):
+        matched = ex_graphs.gap_close_matched_gap()
+        _classify_edges(matched)
+
+        pred_graph = matched.pred_graph
+        gt_graph = matched.gt_graph
+
+        # all edges are TP
+        for edge in gt_graph.edges:
+            assert EdgeFlag.TRUE_POS in gt_graph.edges[edge]
+        for edge in pred_graph.edges:
+            assert EdgeFlag.TRUE_POS in pred_graph.edges[edge]
+
+    def test_gap_close_offset_edge(self):
+        matched = ex_graphs.gap_close_offset()
+        _classify_edges(matched)
+
+        # all gt edges are FN
+        for edge in matched.gt_graph.edges:
+            assert EdgeFlag.FALSE_NEG in matched.gt_graph.edges[edge]
+        # all pred edges are FP
+        for edge in matched.pred_graph.edges:
+            assert EdgeFlag.FALSE_POS in matched.pred_graph.edges[edge]
+
+    def test_gap_close_division_edges(self):
+        matched = ex_graphs.div_parent_gap()
+        _classify_edges(matched)
+
+        # div involved gt_edges are FN
+        for edge in [(2, 3), (3, 4), (3, 5)]:
+            assert EdgeFlag.FALSE_NEG in matched.gt_graph.edges[edge]
+        # two gap close edges are FP
+        for edge in [(9, 11), (9, 12)]:
+            assert EdgeFlag.FALSE_POS in matched.pred_graph.edges[edge]
+
+    def test_gap_close_daughter_edge(self):
+        matched = ex_graphs.div_daughter_gap()
+        _classify_edges(matched)
+
+        # edge to daughter is FP
+        assert EdgeFlag.FALSE_POS in matched.pred_graph.edges[(10, 13)]
+        # two missing edges in gt
+        assert EdgeFlag.FALSE_NEG in matched.gt_graph.edges[(3, 4)]
+        assert EdgeFlag.FALSE_NEG in matched.gt_graph.edges[(4, 6)]

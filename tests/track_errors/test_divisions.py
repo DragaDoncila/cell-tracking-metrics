@@ -240,6 +240,45 @@ class TestStandardShifted:
         assert attrs.get(NodeFlag.FP_DIV) is True
 
 
+class TestGapCloseDivisions:
+    def test_gap_close_no_shift(self):
+        matched = ex_graphs.div_parent_gap()
+        # without a shift we should have an FP and an FN division
+        # as the parent nodes are in different frames
+        _classify_divisions(matched)
+        assert NodeFlag.FP_DIV in matched.pred_graph.nodes[9]
+        assert NodeFlag.FN_DIV in matched.gt_graph.nodes[3]
+
+        matched = ex_graphs.div_daughter_gap()
+        _classify_divisions(matched)
+        # with the division in the correct frame, but no shifting
+        # we have an incorrect child
+        assert NodeFlag.WC_DIV in matched.pred_graph.nodes[10]
+        assert NodeFlag.WC_DIV in matched.gt_graph.nodes[3]
+
+    def test_gap_close_shift(self):
+        matched = ex_graphs.div_parent_gap()
+        _classify_divisions(matched)
+        shifted = _correct_shifted_divisions(matched, n_frames=1)
+        # division is not corrected because `get_succ_by_t` traverses
+        # two successors given a delta of 1, but our immediate successors
+        # are two frames apart. We therefore end up checking children 13 and 14
+        # against gt children 4 and 5.
+        assert NodeFlag.FP_DIV in shifted.pred_graph.nodes[9]
+        assert NodeFlag.FN_DIV in shifted.gt_graph.nodes[3]
+
+        #
+        matched = ex_graphs.div_daughter_gap()
+        _classify_divisions(matched)
+        shifted = _correct_shifted_divisions(matched, n_frames=1)
+        # `_correct_shifted_divisions` only checks pairs of TP/FP
+        # divisions, so the WC_DIV is not corrected. To correct it,
+        # we would need to check shifted successors of all WC_DIV
+        # matched nodes
+        assert NodeFlag.WC_DIV in shifted.pred_graph.nodes[10]
+        assert NodeFlag.WC_DIV in shifted.gt_graph.nodes[3]
+
+
 def test_evaluate_division_events():
     g_gt, g_pred, map_gt, map_pred = get_division_graphs()
     mapper = list(zip(map_gt, map_pred))

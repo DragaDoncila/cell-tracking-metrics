@@ -21,6 +21,7 @@
    :hidden:
    :caption: Track Errors
 
+   track_errors/gap_closing
    track_errors/basic
    track_errors/divisions
    track_errors/ctc

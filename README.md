@@ -28,7 +28,7 @@ The `traccuracy` library has three main components: loaders, matchers, and metri
 Loaders load tracking graphs from other formats, such as the CTC format, into a [TrackingGraph](https://traccuracy.readthedocs.io/en/latest/autoapi/traccuracy/index.html#traccuracy.TrackingGraph) object.
 A TrackingGraph is a spatiotemporal graph.
 Nodes represent a single cell in a given time point, and are annotated with a time and a location.
-Edges point from a node representing a cell in time point `t` to the same cell or its daughter in `t+1`.
+Edges point forward in time from a node representing a cell in time point `t` to the same cell or its daughter in frame `t+1` (or beyond, to represent gap-closing).
 To load TrackingGraphs from a custom format, you will likely need to implement a loader: see
 documentation [here](https://traccuracy.readthedocs.io/en/latest/autoapi/traccuracy/loaders/index.html#module-traccuracy.loaders) for more information.
 
@@ -56,3 +56,6 @@ pipelines, [documented here](https://traccuracy.readthedocs.io/en/latest/cli.htm
 
 **Track**
 : A single cell and all of its progeny. In graph terms, a connected component including divisions.
+
+**Gap-Closing**
+: Also known as *frame-skipping*, these are edges that connect non-consecutive frames to signify a cell being occluded or missing for some frames, before the track continues.

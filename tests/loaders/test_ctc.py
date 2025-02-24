@@ -73,6 +73,23 @@ def test_ctc_single_nodes():
     TrackingGraph(G)
 
 
+def test_ctc_with_gap_closing():
+    data = [
+        {"Cell_ID": 1, "Start": 0, "End": 1, "Parent_ID": 0},
+        {"Cell_ID": 2, "Start": 0, "End": 1, "Parent_ID": 0},
+        # Connecting frame 1 to frame 3
+        {"Cell_ID": 3, "Start": 3, "End": 5, "Parent_ID": 1},
+        # Connecting frame 1 to frame 6
+        {"Cell_ID": 4, "Start": 6, "End": 8, "Parent_ID": 2},
+    ]
+    df = pd.DataFrame(data)
+    G = _ctc.ctc_to_graph(
+        df, pd.DataFrame({"segmentation_id": [], "x": [], "y": [], "z": [], "t": []})
+    )
+    assert G.has_edge("1_1", "3_3")
+    assert G.has_edge("2_1", "4_6")
+
+
 def test_load_data():
     test_dir = os.path.abspath(__file__)
     data_dir = os.path.abspath(
