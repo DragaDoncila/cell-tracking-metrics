@@ -6,6 +6,7 @@ import networkx as nx
 import numpy as np
 import skimage as sk
 
+from tests.examples.segs import nodes_from_segmentation
 from traccuracy._tracking_graph import TrackingGraph
 from traccuracy.loaders import load_ctc_data
 
@@ -122,21 +123,20 @@ def get_movie_with_graph(ndims=3, n_frames=3, n_labels=3):
     # Extend to 3d if needed
     if ndims == 4:
         movie = np.stack([movie, movie, movie], axis=-1)
+        pos_keys = ("x", "y", "z")
+    else:
+        pos_keys = ("x", "y")
 
     # We can assume each object is present and connected across each frame
     G = nx.DiGraph()
-    for t in range(n_frames - 1):
-        for i in range(1, n_labels + 1):
-            G.add_edge(f"{i}_{t}", f"{i}_{t+1}")
-
-    attrs = {}
     for t in range(n_frames):
-        for i in range(1, n_labels + 1):
-            a = {"t": t, "y": 0, "x": 0, "segmentation_id": i}
-            if ndims == 4:
-                a["z"] = 0
-            attrs[f"{i}_{t}"] = a
-    nx.set_node_attributes(G, attrs)
+        nodes = nodes_from_segmentation(
+            movie[t], frame=t, _id="label_time", pos_keys=pos_keys
+        )
+        G.add_nodes_from([(_id, data) for _id, data in nodes.items()])
+        if t > 0:
+            for i in range(1, n_labels + 1):
+                G.add_edge(f"{i}_{t - 1}", f"{i}_{t}")
 
     return TrackingGraph(G, segmentation=movie)
 
