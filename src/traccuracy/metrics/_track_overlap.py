@@ -13,6 +13,7 @@ Definitions (Bise et al., 2011; Chen, 2021; Fukai et al., 2022):
 
 from __future__ import annotations
 
+from collections import defaultdict
 from itertools import product
 from typing import TYPE_CHECKING, Any
 
@@ -54,10 +55,10 @@ class TrackOverlapMetrics(Metric):
 
         # calculate track purity and target effectiveness
         track_purity = _calc_overlap_score(
-            pred_tracklets, gt_tracklets, matched.gt_pred_map
+            pred_tracklets, gt_tracklets, matched.pred_gt_map
         )
         target_effectiveness = _calc_overlap_score(
-            gt_tracklets, pred_tracklets, matched.pred_gt_map
+            gt_tracklets, pred_tracklets, matched.gt_pred_map
         )
         return {
             "track_purity": track_purity,
@@ -80,29 +81,24 @@ def _calc_overlap_score(
             from the overlap tracklet nodes to the reference tracklet nodes
 
     """
-    correct_count = 0
+    max_overlap = 0
     total_count = 0
-
-    # calculate all overlapping edges mapped onto GT ids
-    overlap_tracklets_edges_mapped = []
-    for overlap_tracklet in overlap_tracklets:
-        edges = []
-        for node1, node2 in overlap_tracklet.edges():
-            mapped_nodes1 = overlap_reference_mapping.get(node1, [])
-            mapped_nodes2 = overlap_reference_mapping.get(node2, [])
-            if mapped_nodes1 and mapped_nodes2:
-                for n1, n2 in product(mapped_nodes1, mapped_nodes2):
-                    edges.append((n1, n2))
-        overlap_tracklets_edges_mapped.append(edges)
-
+    overlap_edge_to_tid = {
+        edge: i
+        for i in range(len(overlap_tracklets))
+        for edge in overlap_tracklets[i].edges()
+    }
     for reference_tracklet in reference_tracklets:
-        # find the overlap tracklet with the largest overlap
-        overlaps = [
-            len(set(reference_tracklet.edges()) & set(edges))
-            for edges in overlap_tracklets_edges_mapped
-        ]
-        max_overlap = max(overlaps)
-        correct_count += max_overlap
-        total_count += len(reference_tracklet.edges())
-
-    return correct_count / total_count if total_count > 0 else -1
+        tracklet_length = len(reference_tracklet.edges())
+        overlapping_id_to_count: dict[int, int] = defaultdict(lambda: 0)
+        for ref_src, ref_tgt in reference_tracklet.edges():
+            overlap_src = overlap_reference_mapping.get(ref_src, [])
+            overlap_tgt = overlap_reference_mapping.get(ref_tgt, [])
+            # any edge that has both nodes in an overlap tracklet
+            # could be overlapping
+            for src, tgt in product(overlap_src, overlap_tgt):
+                if (src, tgt) in overlap_edge_to_tid:
+                    overlapping_id_to_count[overlap_edge_to_tid[(src, tgt)]] += 1
+        total_count += tracklet_length
+        max_overlap += max(overlapping_id_to_count.values(), default=0)
+    return max_overlap / total_count if total_count > 0 else -1
