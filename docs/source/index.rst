@@ -19,6 +19,13 @@
 .. toctree::
    :maxdepth: 2
    :hidden:
+   :caption: Matchers
+
+   matchers/matchers
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
    :caption: Track Errors
 
    track_errors/basic
