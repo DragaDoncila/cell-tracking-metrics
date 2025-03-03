@@ -8,7 +8,7 @@ Briefly describe your new Matcher or Metric class, including links to publicatio
 Put an x in the boxes that apply. You can also fill these out after creating the PR. If you're unsure about any of them, don't hesitate to ask. We're here to help! This is simply a reminder of what we are going to look for before merging your code.
 
 - [ ] I have read the developer/contributing docs.
-- [ ] I have added tests that prove that my feature works in various situations.
+- [ ] I have added tests for the standard test examples documented [here](https://traccuracy.readthedocs.io/en/latest/test_cases/index.html), along with end-to-end tests.
 - [ ] I have checked that I maintained or improved code coverage.
 - [ ] I have added benchmarking functions for my change `tests/bench.py`.
 - [ ] I have added a page to the documentation with a complete description of my matcher/metric including any references.

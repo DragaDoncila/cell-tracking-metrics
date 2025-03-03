@@ -9,13 +9,14 @@
 # ---
 
 # %% [markdown]
-# # Graph Test Cases
+# # Graph Error Test Cases (Non-Dividing)
 
-# %% [markdown] To facilitate testing, we have provided a suite of canonical
+# %% [markdown]
+# To facilitate testing, we have provided a suite of canonical
 # examples that cover the basic, simple scenarios that can occur in segmentation
 # and tracking. Here we describe them and show visualizations of each case.
 #
-# Metrics should test all the graph and division cases that are possible with
+# Metrics should test all the graph and division error cases that are possible with
 # the matchers that the metric supports. For example, if the metric requires a
 # one-to-one matching, it is not necessary to test the two-to-one or one-to-two
 # cases.

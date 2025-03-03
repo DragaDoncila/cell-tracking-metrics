@@ -327,10 +327,11 @@ def multicell_3d() -> tuple[np.ndarray, np.ndarray]:
 
 def nodes_from_segmentation(
     seg: np.ndarray,
-    frame: int,
+    frame: int = 0,
     pos_keys=("y", "x"),
     frame_key="t",
-    label_key="label_id",
+    label_key="segmentation_id",
+    _id="label",
 ) -> dict[Any, dict]:
     """Extract candidate nodes from a segmentation. Also computes specified attributes.
     Returns a networkx graph with only nodes, and also a dictionary from frames to
@@ -339,26 +340,32 @@ def nodes_from_segmentation(
     Args:
         segmentation (np.ndarray): A numpy array with integer labels, representing one time
             frame.
-        frame (int): The time frame of this array. Used for making node ids and
-            for populating the attributes dict.
-        pos_keys (tuple[str]): The attribute keys to use to store the positions.
+        frame (int, optional): The time frame of this array. Used for making node ids and
+            for populating the attributes dict. Defaults to 0
+        pos_keys (tuple[str], optional): The attribute keys to use to store the positions.
+            Defaults to ("y", "x")
         frame_key (str, optional): The frame key to use in the attributes dict.
             Defaults to "t".
         label_key (str, optional): The label key to use in the attributes dict.
             Defaults to "label_id"
+        _id (str, optional): What to use for node ids. Options are: "label" - the label
+            value as an integer, "label_time" - a string with format f"{label}_{time}"
 
     Returns:
         dict[Any, dict]: A dictionary from node_ids to node attributes, which
             can be used to create a networkx graph using add_nodes_from().
-            Node Ids are currently "<frame>_<label id>". Attributes include the
+            Node Ids are currently label_id. Attributes include the
             frame and the label.
     """
     nodes = {}
     props = regionprops(seg)
     for regionprop in props:
-        node_id = f"{frame}_{regionprop.label}"
+        if _id == "label":
+            node_id = regionprop.label
+        elif _id == "label_time":
+            node_id = f"{regionprop.label}_{frame}"
         attrs = {frame_key: frame, label_key: regionprop.label}
-        centroid = regionprop.centroid  # [z,] y, x
+        centroid = regionprop.centroid
         assert len(pos_keys) == len(centroid), (
             f"Number of position keys {pos_keys} does not match number of "
             f"elements in centroid {centroid}"

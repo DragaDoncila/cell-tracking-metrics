@@ -11,7 +11,7 @@ from traccuracy.loaders import (
     _load_tiffs,
     load_ctc_data,
 )
-from traccuracy.matchers import CTCMatcher, IOUMatcher
+from traccuracy.matchers import CTCMatcher, IOUMatcher, PointMatcher
 from traccuracy.metrics import BasicMetrics, CTCMetrics, DivisionMetrics
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -185,6 +185,26 @@ def test_iou_matcher(benchmark, gt_data, pred_data, request):
     pred_data = request.getfixturevalue(pred_data)
     benchmark.pedantic(
         IOUMatcher(iou_threshold=0.1).compute_mapping,
+        args=(gt_data, pred_data),
+        rounds=1,
+        iterations=1,
+    )
+
+
+@pytest.mark.timeout(TIMEOUT)
+@pytest.mark.parametrize(
+    "gt_data,pred_data",
+    [
+        ("gt_data_2d", "pred_data_2d"),
+        ("gt_data_3d", "pred_data_3d"),
+    ],
+    ids=["2d", "3d"],
+)
+def test_point_matcher(benchmark, gt_data, pred_data, request):
+    gt_data = request.getfixturevalue(gt_data)
+    pred_data = request.getfixturevalue(pred_data)
+    benchmark.pedantic(
+        PointMatcher(threshold=50).compute_mapping,
         args=(gt_data, pred_data),
         rounds=1,
         iterations=1,
